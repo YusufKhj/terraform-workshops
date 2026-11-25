@@ -28,4 +28,4 @@ Mit einem gemeinsamen Backend können sowohl mein Computer als auch die GitHub-W
 
 ## Projektstruktur
 
-`workshop1/`, `workshop2/` und `workshop3/` enthalten die jeweiligen Terraform-Dateien. In `.github/workflows/` liegen die beiden manuellen GitHub-Workflows. Der Ordner `nachweise/` ist für Screenshots und PDF-Berichte vorgesehen.
+`workshop1/`, `workshop2/` und `workshop3/` enthalten die jeweiligen Terraform-Dateien. In `.github/workflows/` liegen die beiden manuellen GitHub-Workflows. Der Ordner `Dokumentation/` enthält die PDF-Berichte zu den drei Workshops.
