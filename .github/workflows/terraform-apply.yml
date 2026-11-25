@@ -1,0 +1,61 @@
+# Dieser Workflow wird ausschließlich über den manuellen Start ausgelöst.
+name: Terraform Apply
+on:
+  workflow_dispatch:
+
+# Der Workflow muss den Quellcode nur lesen dürfen.
+permissions:
+  contents: read
+
+# Apply und Destroy teilen diese Gruppe und laufen deshalb nicht gleichzeitig.
+concurrency:
+  group: workshop3-terraform
+  cancel-in-progress: false
+
+# Beide Workflows verwenden dieselben temporären Academy-Zugangsdaten.
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+
+jobs:
+  terraform:
+    # GitHub stellt für diesen Lauf eine neue Linux-Maschine bereit.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workshop3
+    steps:
+      # Der Runner erhält die Dateien aus meinem Repository.
+      - name: Checkout
+        uses: actions/checkout@v7
+      # Lokal und in CI verwende ich dieselbe Terraform-Version.
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+      # Ohne Bucket-Namen kann der gemeinsame State nicht geladen werden.
+      - name: Check backend configuration
+        run: test -n "$TF_STATE_BUCKET"
+      # Ich verbinde den Runner mit dem vorhandenen S3-State.
+      - name: Initialize
+        run: terraform init -input=false -lockfile=readonly -backend-config="bucket=$TF_STATE_BUCKET"
+      # Vor AWS-Änderungen werden Format und Konfiguration geprüft.
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+      - name: Validate
+        run: terraform validate
+      # Der gespeicherte Plan bindet die Ausführung an genau die geprüften Änderungen.
+      - name: Plan Apply
+        run: terraform plan -input=false -lock-timeout=5m -out=run.tfplan
+      # Der manuelle Workflow-Start autorisiert die Ausführung des gespeicherten Plans.
+      - name: Apply
+        run: terraform apply -input=false -lock-timeout=5m run.tfplan
+      # Der DNS-Name erscheint als Nachweis im Laufprotokoll.
+      - name: Show load balancer DNS
+        run: terraform output load_balancer_dns

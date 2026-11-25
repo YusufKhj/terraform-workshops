@@ -1,0 +1,18 @@
+# Heruntergeladene Provider bleiben lokal.
+**/.terraform/*
+# State-Dateien und Pläne können vertrauliche Daten enthalten.
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+# Lokale Zugangsdaten und persönliche Variablen werden nicht hochgeladen.
+.env
+.env.*
+*.tfvars
+*.tfvars.json
+backend.hcl
+# Lokale Editor- und macOS-Dateien werden nicht benötigt.
+.DS_Store
+.vscode/
+# .terraform.lock.hcl wird bewusst eingecheckt.
